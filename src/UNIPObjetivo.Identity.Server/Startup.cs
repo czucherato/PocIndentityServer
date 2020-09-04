@@ -5,6 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using System;
+using IdentityServer4.EntityFramework.DbContexts;
+using IdentityServer4.EntityFramework.Options;
 
 namespace UNIPObjetivo.Identity.Server
 {
@@ -24,6 +27,7 @@ namespace UNIPObjetivo.Identity.Server
         public void ConfigureServices(IServiceCollection services)
         {
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+            var optionsContextBuilder = new Action<DbContextOptionsBuilder>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly)));
 
             services.AddControllersWithViews();
 
@@ -35,10 +39,14 @@ namespace UNIPObjetivo.Identity.Server
                 .AddInMemoryApiScopes(Config.GetApiScopes())
                 .AddTestUsers(Config.GetUsers())
                 .AddDeveloperSigningCredential()
-                .AddOperationalStore(options => 
-                    options.ConfigureDbContext = builder => builder.UseSqlServer(
-                        connectionString,
-                        sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
+                .AddConfigurationStore(options => options.ConfigureDbContext = optionsContextBuilder)
+                .AddOperationalStore(options => options.ConfigureDbContext = optionsContextBuilder);
+
+            
+            // This caused my migration to not get run
+            services.AddDbContext<ConfigurationDbContext>(options => options.UseSqlServer(connectionString));
+            services.AddSingleton(sp => new ConfigurationStoreOptions { ConfigureDbContext = optionsContextBuilder });
+            // The above two lines needed to be moved below these lines
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
