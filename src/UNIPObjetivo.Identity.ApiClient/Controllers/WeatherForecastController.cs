@@ -2,14 +2,13 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Authorization;
-
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UNIPObjetivo.Identity.ApiClient.Controllers
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = "BearerIdentity")]
+    [Authorize]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
